@@ -1,5 +1,38 @@
 window.__tabs__ = new Map();
 
+let serialPort = null;
+let serialWriter = null;
+let savedPorts = []; // ports from popup
+
+async function openSerialByIndex(idx) {
+  savedPorts = await navigator.serial.getPorts();
+  const port = savedPorts[idx];
+  if (!port) return false;
+
+  await port.open({ baudRate: 115200 });
+  serialWriter = port.writable.getWriter();
+  serialPort = port;
+  return true;
+}
+
+async function closeSerial() {
+  if (serialWriter) {
+    await serialWriter.releaseLock();
+    serialWriter = null;
+  }
+  if (serialPort) {
+    try { await serialPort.close(); } catch(e) {}
+    serialPort = null;
+  }
+}
+
+async function sendSerial(obj) {
+  if (!serialWriter) return;
+  const data = JSON.stringify(obj) + "\n";
+  await serialWriter.write(new TextEncoder().encode(data));
+}
+
+
 function applyPopupViews(func, args) {
   const views = browser.extension.getViews({ type: "popup" });
   for (const view of views) {
