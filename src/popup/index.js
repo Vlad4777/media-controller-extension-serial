@@ -96,6 +96,56 @@ window["del"] = async function (tid) {
     window.close(); // close popup when the only tab is removed
   }
 };
+async function refreshPorts() {
+  const sel = document.getElementById("serial-ports");
+  sel.innerHTML = '<option value="">-- Select a port --</option>';
+
+  if (!navigator.serial) return;
+
+  const ports = await navigator.serial.getPorts();
+  ports.forEach((port, idx) => {
+    const info = port.getInfo();
+    const opt = document.createElement("option");
+    opt.value = idx;
+    opt.text = `Port ${idx} (VID ${info.usbVendorId}, PID ${info.usbProductId})`;
+    sel.appendChild(opt);
+  });
+}
+
+document.getElementById("serial-request-btn").addEventListener("click", async () => {
+  // triggers the OS-level “choose port” dialog
+  await navigator.serial.requestPort();
+  await refreshPorts();
+});
+
+document.getElementById("serial-connect-btn").addEventListener("click", async () => {
+  const idx = document.getElementById("serial-ports").value;
+  browser.runtime.sendMessage({ type: "serial-connect", idx: Number(idx) });
+});
+
+document.getElementById("serial-disconnect-btn").addEventListener("click", async () => {
+  browser.runtime.sendMessage({ type: "serial-disconnect" });
+});
+
+// ask background for current connection state
+browser.runtime.sendMessage({ type: "serial-query" }).then((state) => {
+  updateSerialUI(state.connected, state.info);
+});
+
+function updateSerialUI(connected, info) {
+  const btnConnect = document.getElementById("serial-connect-btn");
+  const btnDisconnect = document.getElementById("serial-disconnect-btn");
+  const status = document.getElementById("serial-status");
+
+  btnConnect.disabled = connected;
+  btnDisconnect.disabled = !connected;
+
+  status.textContent = connected
+    ? `Connected (VID ${info.usbVendorId}, PID ${info.usbProductId})`
+    : "Not connected";
+}
+
+refreshPorts();
 
 window["update"] = async function (tab) {
   $main.querySelector(`div[data-tid="${tab.id}"]`)?.replaceWith($tab(tab));
