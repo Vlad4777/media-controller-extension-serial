@@ -167,6 +167,7 @@ browser.runtime.onMessage.addListener(async (message, sender) => {
   const tab = window.__tabs__.get(tid);
   if (message.type === "@hook") {
     tab.media = message.media;
+    sendSerial(tab.media);
     await browser.tabs.executeScript(tid, { file: "hook.js" });
   } else if (message.type === "play") {
     tab.media.paused = false;
