@@ -9,5 +9,19 @@
       <div id="ribbon"></div>
     </main>
     <script src="./index.js" type="module"></script>
+    <div id="serial-control">
+  <label for="serial-ports">Serial Port:</label>
+  <select id="serial-ports">
+    <option value="">-- Select a port --</option>
+  </select>
+
+  <button id="serial-request-btn">Choose Port</button>
+  <button id="serial-connect-btn" disabled>Connect</button>
+  <button id="serial-disconnect-btn" disabled>Disconnect</button>
+
+  <div id="serial-status">Not connected</div>
+</div>
   </body>
 </html>
+
+
